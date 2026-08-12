@@ -4,6 +4,7 @@ PitcherIQ API — MLB pitcher comparison & arsenal analysis (2025 Statcast).
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -13,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "pitches.db"
+DB_PATH = Path(os.environ.get("DB_PATH", BASE_DIR / "pitches.db"))
 
 # Minimum pitches to appear in team/role dropdowns
 MIN_PITCHES = 200

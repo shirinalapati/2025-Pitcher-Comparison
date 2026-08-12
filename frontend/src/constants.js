@@ -1,5 +1,6 @@
 // Constants for the application
-export const API_BASE = "http://127.0.0.1:8000";
+export const API_BASE =
+  import.meta.env.VITE_API_BASE?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 
 export const MLB_TEAMS = [
   { abbrev: "AZ", name: "Arizona Diamondbacks" },
