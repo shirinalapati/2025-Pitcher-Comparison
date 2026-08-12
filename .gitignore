@@ -1,0 +1,30 @@
+# Database (rebuild with scripts/build_db.py — do not commit)
+backend/pitches.db
+*.db
+*.db.bak
+
+# Assignment / private docs
+*.pdf
+
+# Python
+backend/venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Environment
+.env
+.env.local
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

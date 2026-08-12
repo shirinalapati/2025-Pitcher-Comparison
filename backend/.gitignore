@@ -1,0 +1,4 @@
+pitches.db
+*.db.bak
+__pycache__/
+venv/
