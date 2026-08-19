@@ -7,16 +7,36 @@ import FreeAgentsTab from "./components/FreeAgentsTab";
 import FreeAgentReliefPitchersTab from "./components/FreeAgentReliefPitchersTab";
 import StuffScoreTab from "./components/StuffScoreTab";
 
+async function fetchJson(url, { retries = 4, delayMs = 2500 } = {}) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${url} failed: ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      lastError = err;
+      // Render free tier cold-starts can take 30–60s
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function fetchSummaryFor(pitcherId) {
   if (!pitcherId) return [];
-  const res = await fetch(`${API_BASE}/pitchers/${pitcherId}/summary`);
-  if (!res.ok) throw new Error(`Summary failed: ${res.status}`);
-  return res.json();
+  return fetchJson(`${API_BASE}/pitchers/${pitcherId}/summary`, {
+    retries: 2,
+    delayMs: 2000,
+  });
 }
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("about");
   const [error, setError] = useState("");
+  const [listsLoading, setListsLoading] = useState(true);
 
   const [freeAgentPitchers, setFreeAgentPitchers] = useState([]);
   const [freeAgentReliefPitchers, setFreeAgentReliefPitchers] = useState([]);
@@ -61,22 +81,52 @@ export default function App() {
   const [mlbStarterStuff, setMlbStarterStuff] = useState(null);
   const [mlbReliefStuff, setMlbReliefStuff] = useState(null);
 
-  useEffect(() => {
-    async function loadLists() {
-      try {
-        const [fa, far] = await Promise.all([
-          fetch(`${API_BASE}/free_agents`).then((r) => r.json()),
-          fetch(`${API_BASE}/free_agents/relief`).then((r) => r.json()),
-        ]);
-        setFreeAgentPitchers(fa);
-        setFreeAgentReliefPitchers(far);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load free-agent lists from backend.");
-      }
+  async function loadFreeAgentLists({ force = false } = {}) {
+    if (
+      !force &&
+      freeAgentPitchers.length > 0 &&
+      freeAgentReliefPitchers.length > 0
+    ) {
+      return;
     }
-    loadLists();
+    setListsLoading(true);
+    try {
+      setError("");
+      const [fa, far] = await Promise.all([
+        fetchJson(`${API_BASE}/free_agents`),
+        fetchJson(`${API_BASE}/free_agents/relief`),
+      ]);
+      if (!Array.isArray(fa) || !Array.isArray(far)) {
+        throw new Error("Unexpected free-agent payload");
+      }
+      setFreeAgentPitchers(fa);
+      setFreeAgentReliefPitchers(far);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Failed to load pitcher lists (the API may be waking up). Wait a few seconds and refresh."
+      );
+    } finally {
+      setListsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadFreeAgentLists({ force: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Retry if user opens an FA tab before the cold-start fetch finished
+  useEffect(() => {
+    if (
+      (activeTab === "free_agents" || activeTab === "free_agents_relief") &&
+      (freeAgentPitchers.length === 0 || freeAgentReliefPitchers.length === 0) &&
+      !listsLoading
+    ) {
+      loadFreeAgentLists({ force: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Team tab: load pitchers when team/role changes
   useEffect(() => {
@@ -385,7 +435,11 @@ export default function App() {
         )}
 
         {activeTab === "free_agents" && (
-          <FreeAgentsTab
+          <>
+            {listsLoading && freeAgentPitchers.length === 0 && (
+              <p className="tab-intro">Loading free-agent lists (API may be waking up)…</p>
+            )}
+            <FreeAgentsTab
             freeAgentPitchers={freeAgentPitchers}
             freeAgentReliefPitchers={freeAgentReliefPitchers}
             selectedFreeAgentId={faStarterId}
@@ -403,10 +457,15 @@ export default function App() {
             comparisonSummary={faStarterCompareSummary}
             error={error}
           />
+          </>
         )}
 
         {activeTab === "free_agents_relief" && (
-          <FreeAgentReliefPitchersTab
+          <>
+            {listsLoading && freeAgentReliefPitchers.length === 0 && (
+              <p className="tab-intro">Loading free-agent lists (API may be waking up)…</p>
+            )}
+            <FreeAgentReliefPitchersTab
             freeAgentReliefPitchers={freeAgentReliefPitchers}
             freeAgentPitchers={freeAgentPitchers}
             selectedFreeAgentReliefId={faReliefId}
@@ -424,6 +483,7 @@ export default function App() {
             comparisonSummary={faReliefCompareSummary}
             error={error}
           />
+          </>
         )}
 
         {activeTab === "stuff_score" && (

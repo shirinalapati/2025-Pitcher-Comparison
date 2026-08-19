@@ -581,6 +581,21 @@ def compute_stuff_score(conn: sqlite3.Connection, pitchers: list[tuple[int, str]
 # ------------------------- ENDPOINTS -------------------------
 
 
+@app.get("/")
+def root():
+    return {
+        "app": "PitcherIQ",
+        "status": "ok",
+        "docs": "/docs",
+        "endpoints": [
+            "/teams",
+            "/free_agents",
+            "/free_agents/relief",
+            "/pitchers/{id}/summary",
+        ],
+    }
+
+
 @app.get("/teams")
 def list_teams():
     return TEAMS
