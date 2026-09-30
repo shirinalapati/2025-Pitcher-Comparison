@@ -206,21 +206,14 @@ export default function FreeAgentsTab({
               pitcher2Name={compareName}
             />
           )}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "2rem",
-              marginTop: "2rem",
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: "0.5rem" }}>{faName}</h3>
+          <div className="compare-columns">
+            <div className="compare-column">
+              <h3>{faName}</h3>
               <PitcherStats summary={summary} />
               <PitchSummaryTable summary={summary} />
             </div>
-            <div>
-              <h3 style={{ marginBottom: "0.5rem" }}>{compareName}</h3>
+            <div className="compare-column">
+              <h3>{compareName}</h3>
               <PitcherStats summary={comparisonSummary} />
               <PitchSummaryTable summary={comparisonSummary} />
             </div>
