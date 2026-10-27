@@ -155,14 +155,29 @@ body {
   margin-bottom: 1rem;
 }
 
-select {
+select,
+select.pitcher-select {
   min-width: 260px;
   padding: 0.45rem 0.75rem;
   font-size: 0.95rem;
   border-radius: 0.5rem;
   border: 1px solid #d1d5db;
   background: #ffffff;
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  color-scheme: light;
   text-align: center;
+}
+
+select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+select:disabled {
+  color: #6b7280;
+  -webkit-text-fill-color: #6b7280;
+  background: #f3f4f6;
 }
 
 .pitcher-select {
